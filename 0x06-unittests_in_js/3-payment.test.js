@@ -1,16 +1,18 @@
 const { describe, it } = require("mocha");
 const sinon = require("sinon");
-const processPaymentRequest = require("./3-payment");
-const MathUtils = require("./utils");
+const sendPaymentRequestToApi = require("./3-payment");
+const Utils = require("./utils");
 const assert = require("assert");
 
-describe("processPaymentRequest", function() {
-    it("should verify that MathUtils.performCalculation was called once", function() {
-        const spy = sinon.spy(MathUtils, "performCalculation");
+describe("sendPaymentRequestToApi", function() {
+    it("should call Utils.calculateNumber with SUM and the provided arguments", function() {
+        const spy = sinon.spy(Utils, "calculateNumber");
 
-        processPaymentRequest(50, 24.52);
+        sendPaymentRequestToApi(100, 20);
 
         assert(spy.calledOnce);
-        spy.restore();
+        assert(spy.calledWith("SUM", 100, 20));
+
+        spy.restore(); // Always restore the spy to avoid affecting other tests
     });
 });
