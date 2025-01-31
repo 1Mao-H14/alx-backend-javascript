@@ -1,71 +1,63 @@
 const express = require('express');
+
 const { readFile } = require('fs');
 
-const appServer = express();
-const listeningPort = 1245;
+const app = express();
+const port = 1245;
 
-function getStudentDetails(filePath) {
-  const studentByField = {};
-  const fieldStudentCount = {};
-  let totalStudentCount = 0;
-
+function countStudents(fileName) {
+  const students = {};
+  const fields = {};
+  let length = 0;
   return new Promise((resolve, reject) => {
-    readFile(filePath, (err, data) => {
+    readFile(fileName, (err, data) => {
       if (err) {
         reject(err);
       } else {
-        let result = '';
-        const fileLines = data.toString().split('\n');
-
-        for (let i = 0; i < fileLines.length; i += 1) {
-          if (fileLines[i]) {
-            totalStudentCount += 1;
-            const studentInfo = fileLines[i].split(',');
-            const studentName = studentInfo[0];
-            const studentMajor = studentInfo[3];
-
-            if (Object.prototype.hasOwnProperty.call(studentByField, studentMajor)) {
-              studentByField[studentMajor].push(studentName);
+        let output = '';
+        const lines = data.toString().split('\n');
+        for (let i = 0; i < lines.length; i += 1) {
+          if (lines[i]) {
+            length += 1;
+            const field = lines[i].toString().split(',');
+            if (Object.prototype.hasOwnProperty.call(students, field[3])) {
+              students[field[3]].push(field[0]);
             } else {
-              studentByField[studentMajor] = [studentName];
+              students[field[3]] = [field[0]];
             }
-
-            if (Object.prototype.hasOwnProperty.call(fieldStudentCount, studentMajor)) {
-              fieldStudentCount[studentMajor] += 1;
+            if (Object.prototype.hasOwnProperty.call(fields, field[3])) {
+              fields[field[3]] += 1;
             } else {
-              fieldStudentCount[studentMajor] = 1;
+              fields[field[3]] = 1;
             }
           }
         }
-
-        const totalStudents = totalStudentCount - 1;  // Exclude header
-        result += `Total number of students: ${totalStudents}\n`;
-
-        for (const [major, count] of Object.entries(fieldStudentCount)) {
-          if (major !== 'field') {
-            result += `Number of students in ${major}: ${count}. `;
-            result += `List: ${studentByField[major].join(', ')}\n`;
+        const l = length - 1;
+        output += `Number of students: ${l}\n`;
+        for (const [key, value] of Object.entries(fields)) {
+          if (key !== 'field') {
+            output += `Number of students in ${key}: ${value}. `;
+            output += `List: ${students[key].join(', ')}\n`;
           }
         }
-
-        resolve(result);
+        resolve(output);
       }
     });
   });
 }
 
-appServer.get('/', (req, res) => {
-  res.send('Welcome to Holberton School!');
+app.get('/', (request, response) => {
+  response.send('Hello Holberton School!');
 });
-
-appServer.get('/students', (req, res) => {
-  getStudentDetails(process.argv[2].toString()).then((output) => {
-    res.send(['This is the list of our students:', output].join('\n'));
+app.get('/students', (request, response) => {
+  countStudents(process.argv[2].toString()).then((output) => {
+    response.send(['This is the list of our students', output].join('\n'));
   }).catch(() => {
-    res.send('This is the list of our students\nUnable to load the database');
+    response.send('This is the list of our students\nCannot load the database');
   });
 });
 
-appServer.listen(listeningPort, () => {});
+app.listen(port, () => {
+});
 
-module.exports = appServer;
+module.exports = app;
